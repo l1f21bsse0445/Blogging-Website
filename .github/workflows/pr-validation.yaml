@@ -1,4 +1,4 @@
-name: pr-validation
+name: PR Validation
 
 on:
   pull_request:
@@ -11,51 +11,61 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout code
+      # Checkout the code from the PR
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      # Step 3: Install dependencies
-      - name: Install dependencies
+      # Install necessary dependencies for linting
+      - name: Install dependencies for linting
         run: |
           npm install -g htmlhint stylelint
 
-      # Step 4: Lint HTML files
+      # Lint HTML files in the 'src' folder
       - name: Lint HTML files
         run: htmlhint "src/**/*.html"
 
-      # Step 5: Lint CSS files
+      # Lint CSS files in the 'styles' folder
       - name: Lint CSS files
         run: stylelint "styles/**/*.css"
 
   build:
     name: Build Static Website
     runs-on: ubuntu-latest
-    needs: linting
+    needs: linting  # Ensure this job runs only after linting passes
 
     steps:
-      # Step 1: Checkout code
+      # Checkout the code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Node.js
+      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      # Step 3: Install Parcel and dependencies
-      - name: Install Parcel
+      # Install Parcel and other dependencies
+      - name: Install Parcel and dependencies
         run: |
           npm install -g parcel
           npm install
 
-      # Step 4: Build the website
-      - name: Build the website
-        run: parcel build src/index.html
+      # Build the static website with Parcel (without deploying it)
+      - name: Build the website using Parcel
+        run: |
+          parcel build src/index.html --no-source-maps --no-cache
+
+      # Ensure Parcel built successfully (this step will only pass if the build was successful)
+      - name: Verify build success
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "Build failed: dist directory not found!";
+            exit 1;
+          fi
+          echo "Build was successful!";
