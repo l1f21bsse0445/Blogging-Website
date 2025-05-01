@@ -1,0 +1,53 @@
+name: Deploy Development
+
+on:
+  push:
+    branches:
+      - develop  # Trigger the workflow on any push to the develop branch
+
+jobs:
+  build:
+    name: Build Static Website
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install -g parcel
+
+      # Build the static website using Parcel
+      - name: Build the website using Parcel
+        run: |
+          parcel build src/index.html --no-source-maps --no-cache
+
+      # Upload the build artifact (dist folder)
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    runs-on: ubuntu-latest
+    needs: build  # Ensure this job runs after the build job
+
+    steps:
+      # Checkout code (necessary for the deployment process)
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Deploy the static site to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
